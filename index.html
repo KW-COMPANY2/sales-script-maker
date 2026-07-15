@@ -1,0 +1,105 @@
+<!-- Output: html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>営業スクリプトメーカー（Closed Loop）</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>営業スクリプトメーカー</h1>
+    <p class="subtitle">使うほど賢くなる・電話営業スクリプト自動生成</p>
+  </header>
+
+  <main class="container">
+    <!-- 入力エリア -->
+    <section class="card" id="input-section">
+      <h2>1. 条件を入力</h2>
+
+      <label>商材・サービス名
+        <input type="text" id="product" placeholder="例：クラウド勤怠管理システム" />
+      </label>
+
+      <label>ターゲット業種
+        <input type="text" id="industry" placeholder="例：中小の製造業" />
+      </label>
+
+      <label>ターゲットの役職
+        <select id="role">
+          <option>経営者・社長</option>
+          <option>役員・部長クラス</option>
+          <option>現場担当者</option>
+          <option>総務・人事</option>
+        </select>
+      </label>
+
+      <label>訴求したい強み
+        <input type="text" id="strength" placeholder="例：導入コスト無料・工数削減" />
+      </label>
+
+      <label>トーンの選択
+        <select id="tone">
+          <option>丁寧・信頼重視</option>
+          <option>フレンドリー・親近感</option>
+          <option>スピード・端的</option>
+        </select>
+      </label>
+
+      <button id="generate-btn">スクリプトを生成する（A/B 2パターン）</button>
+      <p class="loading" id="loading" hidden>AIが生成中です…（10〜20秒）</p>
+    </section>
+
+    <!-- 結果エリア -->
+    <section id="result-section" hidden>
+      <h2>2. 生成結果（A/Bテスト用）</h2>
+      <div class="ab-wrapper">
+        <div class="card script-card" id="card-A">
+          <h3>パターン A</h3>
+          <div class="script-body" id="script-A"></div>
+          <div class="feedback">
+            <button class="btn-win" data-pattern="A">このパターンで成約した</button>
+            <button class="btn-use" data-pattern="A">使った（未成約）</button>
+            <button class="btn-save" data-pattern="A">登録する</button>
+          </div>
+        </div>
+
+        <div class="card script-card" id="card-B">
+          <h3>パターン B</h3>
+          <div class="script-body" id="script-B"></div>
+          <div class="feedback">
+            <button class="btn-win" data-pattern="B">このパターンで成約した</button>
+            <button class="btn-use" data-pattern="B">使った（未成約）</button>
+            <button class="btn-save" data-pattern="B">登録する</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 学習状況の可視化 -->
+    <section class="card" id="stats-section">
+      <h2>3. 学習状況（Closed Loop）</h2>
+      <p class="stats-desc">使うほど、勝ちパターンが蓄積されてAIが賢くなります。</p>
+      <div id="stats-body">読み込み中…</div>
+      <button id="refresh-stats">最新の学習状況を見る</button>
+    </section>
+
+    <!-- 登録済みパターン + トレンドフック編集 -->
+    <section class="card" id="saved-section">
+      <h2>4. 登録済みパターン・トレンドフック編集</h2>
+      <label>今のトレンド・時事フックを追加
+        <input type="text" id="trend-hook" placeholder="例：値上げ対策・人手不足・インボイス対応" />
+      </label>
+      <button id="apply-trend">登録パターンにトレンドを反映して再編集</button>
+      <div id="saved-list">まだ登録がありません。</div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <small>完全無料構成：GitHub Pages / Cloudflare Workers / Workers KV / Gemini API</small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
