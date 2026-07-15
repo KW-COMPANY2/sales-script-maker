@@ -91,6 +91,81 @@ button:hover { background: var(--primary-dark); }
   line-height: 1.6;
 }
 
+/* 金額補助UI */
+.price-block {
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.price-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.price-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 8px 0 0;
+}
+
+.price-row {
+  margin-top: 12px;
+  padding: 10px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.price-row-top {
+  display: grid;
+  grid-template-columns: 1.1fr 1.4fr 0.9fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.price-row-top input,
+.price-row-top select { margin-top: 0; }
+
+.price-amount { text-align: right; font-weight: 600; }
+
+.quick-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.quick-btns button {
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  margin-top: 0;
+  background: #e0e7ff;
+  color: var(--primary-dark);
+}
+.quick-btns button:hover { background: #c7d2fe; }
+
+.quick-btns .btn-clear {
+  background: #f1f5f9;
+  color: var(--muted);
+}
+
+.btn-remove {
+  background: var(--reject);
+  padding: 8px 12px;
+  margin-top: 0;
+}
+.btn-remove:hover { background: #b91c1c; }
+
+.btn-add {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  margin-top: 0;
+}
+
 /* キャンペーン動的フィールド */
 .campaign-block {
   border: 1px dashed var(--border);
@@ -107,12 +182,6 @@ button:hover { background: var(--primary-dark); }
   font-size: 0.9rem;
 }
 
-.btn-add {
-  padding: 6px 12px;
-  font-size: 0.85rem;
-  margin-top: 0;
-}
-
 .campaign-row {
   display: grid;
   grid-template-columns: 1.2fr 1fr 1.5fr auto;
@@ -124,14 +193,8 @@ button:hover { background: var(--primary-dark); }
 .campaign-row input,
 .campaign-row select { margin-top: 0; }
 
-.btn-remove {
-  background: var(--reject);
-  padding: 8px 12px;
-  margin-top: 0;
-}
-.btn-remove:hover { background: #b91c1c; }
-
 @media (max-width: 700px) {
+  .price-row-top { grid-template-columns: 1fr 1fr; }
   .campaign-row { grid-template-columns: 1fr 1fr; }
 }
 
