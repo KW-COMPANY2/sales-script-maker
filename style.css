@@ -128,3 +128,13 @@ button:hover { background: var(--primary-dark); }
   padding: 20px;
   color: var(--muted);
 }
+.privacy-note {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
