@@ -53,27 +53,6 @@
         </select>
       </label>
 
-      <label>シーン別フック（任意）
-        <select id="scene">
-          <option value="">指定なし</option>
-          <option>決算期・予算消化</option>
-          <option>新年度・期初</option>
-          <option>繁忙期対策</option>
-          <option>人手不足対策</option>
-          <option>コスト削減ニーズ</option>
-          <option>競合切り替え</option>
-        </select>
-      </label>
-
-      <!-- キャンペーン動的追加エリア -->
-      <div class="campaign-block">
-        <div class="campaign-head">
-          <span>キャンペーン・特典情報（任意・複数追加可）</span>
-          <button type="button" id="add-campaign" class="btn-add">＋ 追加</button>
-        </div>
-        <div id="campaign-list"></div>
-      </div>
-
       <button id="generate-btn">スクリプトを生成する（A/B 2パターン）</button>
       <p class="loading" id="loading" hidden>AIが生成中です…（10〜20秒）</p>
     </section>
@@ -83,23 +62,21 @@
       <h2>2. 生成結果（A/Bテスト用）</h2>
       <div class="ab-wrapper">
         <div class="card script-card" id="card-A">
-          <h3>パターン A <button class="btn-copy" data-pattern="A">コピー</button></h3>
+          <h3>パターン A</h3>
           <div class="script-body" id="script-A"></div>
           <div class="feedback">
-            <button class="btn-win" data-pattern="A">成約した</button>
+            <button class="btn-win" data-pattern="A">このパターンで成約した</button>
             <button class="btn-use" data-pattern="A">使った（未成約）</button>
-            <button class="btn-reject" data-pattern="A">却下</button>
             <button class="btn-save" data-pattern="A">登録する</button>
           </div>
         </div>
 
         <div class="card script-card" id="card-B">
-          <h3>パターン B <button class="btn-copy" data-pattern="B">コピー</button></h3>
+          <h3>パターン B</h3>
           <div class="script-body" id="script-B"></div>
           <div class="feedback">
-            <button class="btn-win" data-pattern="B">成約した</button>
+            <button class="btn-win" data-pattern="B">このパターンで成約した</button>
             <button class="btn-use" data-pattern="B">使った（未成約）</button>
-            <button class="btn-reject" data-pattern="B">却下</button>
             <button class="btn-save" data-pattern="B">登録する</button>
           </div>
         </div>
