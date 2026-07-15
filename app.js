@@ -3,19 +3,48 @@ const WORKER_URL = "https://sales-script-maker.skunkonsen.workers.dev";
 // 直近の生成結果を一時保存（フィードバック送信時に使う）
 let lastResult = { A: null, B: null, inputs: null };
 
+// --- 個人情報らしき入力を検知する簡易チェック（送信前の一次防御） ---
+function detectSensitive(text) {
+  if (!text) return [];
+  const hits = [];
+  // 電話番号（ハイフンあり/なし）
+  if (/0\d{1,4}-?\d{1,4}-?\d{3,4}/.test(text)) hits.push("電話番号");
+  // メールアドレス
+  if (/[\w.+-]+@[\w-]+\.[\w.-]+/.test(text)) hits.push("メールアドレス");
+  // 法人格を含む具体的な会社名
+  if (/(株式会社|有限会社|合同会社|\(株\)|㈱)/.test(text)) hits.push("会社名");
+  return hits;
+}
+
+function checkAllInputs(inputs) {
+  const found = new Set();
+  Object.values(inputs).forEach((v) => detectSensitive(v).forEach((h) => found.add(h)));
+  return [...found];
+}
+
 // --- 1. 生成ボタン ---
 document.getElementById("generate-btn").addEventListener("click", async () => {
   const inputs = {
     product: document.getElementById("product").value,
-    industry: document.getElementById("industry").value,
-    role: document.getElementById("role").value,
     strength: document.getElementById("strength").value,
+    price: document.getElementById("price").value,
+    term: document.getElementById("term").value,
     tone: document.getElementById("tone").value,
   };
 
   if (!inputs.product) {
     alert("商材・サービス名を入力してください。");
     return;
+  }
+
+  // 個人情報チェック（検知したら確認を求める）
+  const sensitive = checkAllInputs(inputs);
+  if (sensitive.length > 0) {
+    const ok = confirm(
+      `入力内容に「${sensitive.join("・")}」らしき情報が含まれています。\n` +
+        `安全のため自動で伏字化して処理します。このまま続けますか？`
+    );
+    if (!ok) return;
   }
 
   document.getElementById("loading").hidden = false;
@@ -70,7 +99,7 @@ document.querySelectorAll(".btn-win, .btn-use").forEach((btn) => {
 document.querySelectorAll(".btn-save").forEach((btn) => {
   btn.addEventListener("click", async (e) => {
     const pattern = e.target.dataset.pattern;
-    const name = prompt("このパターンの名前を付けてください（例：製造業・社長向け）");
+    const name = prompt("このパターンの名前を付けてください（例：勤怠管理・月額プラン向け）");
     if (!name) return;
 
     await fetch(`${WORKER_URL}/save`, {
