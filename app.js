@@ -3,6 +3,103 @@ const WORKER_URL = "https://sales-script-maker.skunkonsen.workers.dev";
 // 直近の生成結果を一時保存
 let lastResult = { A: null, B: null, inputs: null };
 
+// ========== 金額 補助UI ==========
+const PRICE_LABELS = ["月額", "初期費用", "年額", "買い切り", "オプション", "その他"];
+// クイックボタン（表示ラベル : 加算する円）
+const QUICK_STEPS = [
+  { label: "＋1千", value: 1000 },
+  { label: "＋5千", value: 5000 },
+  { label: "＋1万", value: 10000 },
+  { label: "＋5万", value: 50000 },
+  { label: "＋10万", value: 100000 },
+  { label: "＋100万", value: 1000000 },
+];
+
+function formatYen(n) {
+  return Number(n || 0).toLocaleString("ja-JP");
+}
+
+function createPriceRow() {
+  const row = document.createElement("div");
+  row.className = "price-row";
+
+  // 上段：ラベル / 金額表示 / 単位 / 削除
+  const top = document.createElement("div");
+  top.className = "price-row-top";
+
+  const labelSel = document.createElement("select");
+  labelSel.className = "p-label";
+  PRICE_LABELS.forEach((l) => {
+    const o = document.createElement("option");
+    o.textContent = l;
+    labelSel.appendChild(o);
+  });
+
+  const amount = document.createElement("input");
+  amount.type = "number";
+  amount.min = "0";
+  amount.step = "1000";
+  amount.className = "p-amount price-amount";
+  amount.value = 0;
+  amount.placeholder = "金額";
+
+  const unitSel = document.createElement("select");
+  unitSel.className = "p-unit";
+  ["円（税抜）", "円（税込）", "円/月", "円/年"].forEach((u) => {
+    const o = document.createElement("option");
+    o.textContent = u;
+    unitSel.appendChild(o);
+  });
+
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.className = "btn-remove";
+  removeBtn.textContent = "×";
+  removeBtn.addEventListener("click", () => row.remove());
+
+  top.append(labelSel, amount, unitSel, removeBtn);
+
+  // 下段：クイックボタン群
+  const quick = document.createElement("div");
+  quick.className = "quick-btns";
+  QUICK_STEPS.forEach((step) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = step.label;
+    b.addEventListener("click", () => {
+      amount.value = Number(amount.value || 0) + step.value;
+    });
+    quick.appendChild(b);
+  });
+  // クリアボタン
+  const clearBtn = document.createElement("button");
+  clearBtn.type = "button";
+  clearBtn.className = "btn-clear";
+  clearBtn.textContent = "クリア";
+  clearBtn.addEventListener("click", () => (amount.value = 0));
+  quick.appendChild(clearBtn);
+
+  row.append(top, quick);
+  return row;
+}
+
+document.getElementById("add-price").addEventListener("click", () => {
+  document.getElementById("price-list").appendChild(createPriceRow());
+});
+
+// 金額行を文章化（例：「月額 9,800円/月・初期費用 0円（税抜）」）
+function collectPrice() {
+  const rows = document.querySelectorAll("#price-list .price-row");
+  const parts = [];
+  rows.forEach((row) => {
+    const label = row.querySelector(".p-label").value;
+    const amount = Number(row.querySelector(".p-amount").value || 0);
+    const unit = row.querySelector(".p-unit").value;
+    if (amount > 0) parts.push(`${label} ${formatYen(amount)}${unit}`);
+  });
+  return parts.join("・");
+}
+
 // ========== キャンペーン動的フィールド ==========
 const CAMPAIGN_TYPES = ["値引き", "期間限定", "特典付与", "今だけ", "先着限定", "無料トライアル", "その他"];
 
@@ -41,7 +138,6 @@ document.getElementById("add-campaign").addEventListener("click", () => {
   document.getElementById("campaign-list").appendChild(createCampaignRow());
 });
 
-// キャンペーン入力を配列で収集（期限切れは警告して除外）
 function collectCampaigns() {
   const rows = document.querySelectorAll("#campaign-list .campaign-row");
   const today = new Date().toISOString().slice(0, 10);
@@ -71,7 +167,7 @@ function detectSensitive(text) {
 
 function checkAllInputs(inputs) {
   const found = new Set();
-  const flat = [inputs.product, inputs.strength, inputs.price,
+  const flat = [inputs.product, inputs.strength,
     ...(inputs.campaigns || []).map((c) => c.detail)];
   flat.forEach((v) => detectSensitive(v).forEach((h) => found.add(h)));
   return [...found];
@@ -88,10 +184,12 @@ document.getElementById("generate-btn").addEventListener("click", async () => {
     );
   }
 
+  const priceText = collectPrice();
+
   const inputs = {
     product: document.getElementById("product").value,
     strength: document.getElementById("strength").value,
-    price: document.getElementById("price").value,
+    price: priceText || "未設定",
     term: document.getElementById("term").value,
     tone: document.getElementById("tone").value,
     scene: document.getElementById("scene").value,
@@ -263,7 +361,8 @@ document.getElementById("apply-trend").addEventListener("click", async () => {
   alert("登録パターンに最新トレンドを反映しました。");
 });
 
-// 初回：キャンペーン行を1つ用意 + データ読み込み
+// 初回：金額行1つ・キャンペーン行1つを用意 + データ読み込み
+document.getElementById("price-list").appendChild(createPriceRow());
 document.getElementById("campaign-list").appendChild(createCampaignRow());
 loadStats();
 loadSaved();
