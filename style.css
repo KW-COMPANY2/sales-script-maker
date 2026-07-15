@@ -1,0 +1,130 @@
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1e40af;
+  --bg: #f5f7fb;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --win: #16a34a;
+  --muted: #64748b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+}
+
+.app-header {
+  background: var(--primary);
+  color: #fff;
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.app-header h1 { margin: 0; font-size: 1.5rem; }
+.subtitle { margin: 4px 0 0; opacity: 0.9; font-size: 0.9rem; }
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+h2 { font-size: 1.15rem; margin-top: 0; }
+
+label {
+  display: block;
+  margin-bottom: 14px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: normal;
+}
+
+button {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 18px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 8px;
+}
+
+button:hover { background: var(--primary-dark); }
+
+.loading { color: var(--muted); margin-top: 12px; }
+
+.ab-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 700px) {
+  .ab-wrapper { grid-template-columns: 1fr; }
+}
+
+.script-card h3 {
+  margin-top: 0;
+  color: var(--primary-dark);
+}
+
+.script-body {
+  white-space: pre-wrap;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 0.9rem;
+  min-height: 120px;
+}
+
+.feedback {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn-win { background: var(--win); }
+.btn-win:hover { background: #15803d; }
+.btn-use { background: var(--muted); }
+.btn-save { background: var(--primary); }
+
+.stats-desc { color: var(--muted); font-size: 0.9rem; }
+
+#stats-body, #saved-list {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 0.9rem;
+}
+
+.app-footer {
+  text-align: center;
+  padding: 20px;
+  color: var(--muted);
+}
