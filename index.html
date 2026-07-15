@@ -18,25 +18,31 @@
     <section class="card" id="input-section">
       <h2>1. 条件を入力</h2>
 
+      <div class="privacy-note">
+        ⚠️ 実在する<b>個人名・会社名・電話番号・メールアドレス</b>は入力しないでください。
+        入力された場合、自動的に伏字化して処理します（例：株式会社◯◯）。
+      </div>
+
       <label>商材・サービス名
         <input type="text" id="product" placeholder="例：クラウド勤怠管理システム" />
       </label>
 
-      <label>ターゲット業種
-        <input type="text" id="industry" placeholder="例：中小の製造業" />
-      </label>
-
-      <label>ターゲットの役職
-        <select id="role">
-          <option>経営者・社長</option>
-          <option>役員・部長クラス</option>
-          <option>現場担当者</option>
-          <option>総務・人事</option>
-        </select>
-      </label>
-
       <label>訴求したい強み
         <input type="text" id="strength" placeholder="例：導入コスト無料・工数削減" />
+      </label>
+
+      <label>金額
+        <input type="text" id="price" placeholder="例：月額9,800円／初期費用0円" />
+      </label>
+
+      <label>契約期間
+        <select id="term">
+          <option>月額（縛りなし）</option>
+          <option>6ヶ月契約</option>
+          <option>1年契約</option>
+          <option>2年契約</option>
+          <option>買い切り</option>
+        </select>
       </label>
 
       <label>トーンの選択
