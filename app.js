@@ -1,3 +1,4 @@
+// app.js
 const WORKER_URL = "https://sales-script-maker.skunkonsen.workers.dev";
 
 // 直近の生成結果を一時保存
@@ -198,6 +199,7 @@ document.getElementById("generate-btn").addEventListener("click", async () => {
 
   if (!inputs.product) {
     alert("商材・サービス名を入力してください。");
+    document.getElementById("product").focus();
     return;
   }
 
@@ -219,16 +221,38 @@ document.getElementById("generate-btn").addEventListener("click", async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(inputs),
     });
+
+    // 【改善】サーバーがエラーを返した場合を検知
+    if (!res.ok) {
+      throw new Error(`サーバー応答エラー（${res.status}）`);
+    }
+
     const data = await res.json();
 
-    document.getElementById("script-A").textContent = data.patternA;
-    document.getElementById("script-B").textContent = data.patternB;
-    document.getElementById("result-section").hidden = false;
+    // 【改善】サーバー側のエラー内容を検知
+    if (data.error) {
+      throw new Error(`サーバー内部エラー：${data.error}`);
+    }
 
-    lastResult = { A: data.patternA, B: data.patternB, inputs };
+    const a = data.patternA || "";
+    const b = data.patternB || "";
+
+    // 【改善】両方とも空・失敗文言のときは分かりやすく通知
+    const looksFailed = (t) => !t || t.includes("生成に失敗");
+    if (looksFailed(a) && looksFailed(b)) {
+      throw new Error("AIから有効な結果が返りませんでした。時間をおいて再度お試しください。");
+    }
+
+    document.getElementById("script-A").textContent = a || "（このパターンは生成できませんでした）";
+    document.getElementById("script-B").textContent = b || "（このパターンは生成できませんでした）";
+    document.getElementById("result-section").hidden = false;
+    document.getElementById("result-section").scrollIntoView({ behavior: "smooth" });
+
+    lastResult = { A: a, B: b, inputs };
     loadStats();
   } catch (e) {
-    alert("生成に失敗しました。時間をおいて再度お試しください。");
+    // 【改善】原因を画面に表示（真っ白で止まらない）
+    alert("生成に失敗しました。\n原因：" + e.message);
     console.error(e);
   } finally {
     document.getElementById("loading").hidden = true;
@@ -255,6 +279,10 @@ document.querySelectorAll(".btn-copy").forEach((btn) => {
 document.querySelectorAll(".btn-win, .btn-use, .btn-reject").forEach((btn) => {
   btn.addEventListener("click", async (e) => {
     const pattern = e.target.dataset.pattern;
+    if (!lastResult[pattern]) {
+      alert("先にスクリプトを生成してください。");
+      return;
+    }
     let result = "use";
     if (e.target.classList.contains("btn-win")) result = "win";
     if (e.target.classList.contains("btn-reject")) result = "reject";
@@ -264,25 +292,30 @@ document.querySelectorAll(".btn-win, .btn-use, .btn-reject").forEach((btn) => {
       rejectReason = prompt("却下理由（例：表現が固い・訴求が弱い）※AIが避けるべき点を学習します") || "";
     }
 
-    await fetch(`${WORKER_URL}/feedback`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        pattern,
-        result,
-        rejectReason,
-        script: lastResult[pattern],
-        inputs: lastResult.inputs,
-      }),
-    });
+    try {
+      await fetch(`${WORKER_URL}/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pattern,
+          result,
+          rejectReason,
+          script: lastResult[pattern],
+          inputs: lastResult.inputs,
+        }),
+      });
 
-    const msg = {
-      win: "成約データを記録しました！AIが学習します。",
-      use: "使用データを記録しました。",
-      reject: "却下理由を記録しました。次回以降、この傾向を避けます。",
-    };
-    alert(msg[result]);
-    loadStats();
+      const msg = {
+        win: "成約データを記録しました！AIが学習します。",
+        use: "使用データを記録しました。",
+        reject: "却下理由を記録しました。次回以降、この傾向を避けます。",
+      };
+      alert(msg[result]);
+      loadStats();
+    } catch (err) {
+      alert("記録に失敗しました。通信環境をご確認ください。");
+      console.error(err);
+    }
   });
 });
 
@@ -290,20 +323,29 @@ document.querySelectorAll(".btn-win, .btn-use, .btn-reject").forEach((btn) => {
 document.querySelectorAll(".btn-save").forEach((btn) => {
   btn.addEventListener("click", async (e) => {
     const pattern = e.target.dataset.pattern;
+    if (!lastResult[pattern]) {
+      alert("先にスクリプトを生成してください。");
+      return;
+    }
     const name = prompt("このパターンの名前を付けてください（例：勤怠管理・月額プラン向け）");
     if (!name) return;
 
-    await fetch(`${WORKER_URL}/save`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        script: lastResult[pattern],
-        inputs: lastResult.inputs,
-      }),
-    });
-    alert("登録しました。");
-    loadSaved();
+    try {
+      await fetch(`${WORKER_URL}/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          script: lastResult[pattern],
+          inputs: lastResult.inputs,
+        }),
+      });
+      alert("登録しました。");
+      loadSaved();
+    } catch (err) {
+      alert("登録に失敗しました。通信環境をご確認ください。");
+      console.error(err);
+    }
   });
 });
 
@@ -348,17 +390,26 @@ document.getElementById("apply-trend").addEventListener("click", async () => {
   const trend = document.getElementById("trend-hook").value;
   if (!trend) { alert("トレンド・フックを入力してください。"); return; }
 
-  document.getElementById("saved-list").textContent = "トレンドを反映中…";
-  const res = await fetch(`${WORKER_URL}/apply-trend`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ trend }),
-  });
-  const data = await res.json();
-  document.getElementById("saved-list").innerHTML = data.items
-    .map((it) => `<div class="card"><b>${it.name}</b><div class="script-body">${it.script}</div></div>`)
-    .join("");
-  alert("登録パターンに最新トレンドを反映しました。");
+  document.getElementById("saved-list").textContent = "トレンドを反映中…（登録数により時間がかかります）";
+  try {
+    const res = await fetch(`${WORKER_URL}/apply-trend`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ trend }),
+    });
+    const data = await res.json();
+    if (!data.items || data.items.length === 0) {
+      document.getElementById("saved-list").textContent = "反映対象の登録パターンがありません。先にパターンを登録してください。";
+      return;
+    }
+    document.getElementById("saved-list").innerHTML = data.items
+      .map((it) => `<div class="card"><b>${it.name}</b><div class="script-body">${it.script}</div></div>`)
+      .join("");
+    alert("登録パターンに最新トレンドを反映しました。");
+  } catch (err) {
+    document.getElementById("saved-list").textContent = "トレンド反映に失敗しました。時間をおいて再度お試しください。";
+    console.error(err);
+  }
 });
 
 // 初回：金額行1つ・キャンペーン行1つを用意 + データ読み込み
