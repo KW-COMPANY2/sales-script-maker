@@ -1,11 +1,13 @@
+// app.js
 const WORKER_URL = "https://sales-script-maker.skunkonsen.workers.dev";
 
 // 直近の生成結果を一時保存
 let lastResult = { A: null, B: null, inputs: null };
+// 編集中かどうかの状態
+let editing = { A: false, B: false };
 
 // ========== 金額 補助UI ==========
 const PRICE_LABELS = ["月額", "初期費用", "年額", "買い切り", "オプション", "その他"];
-// クイックボタン（表示ラベル : 加算する円）
 const QUICK_STEPS = [
   { label: "＋1千", value: 1000 },
   { label: "＋5千", value: 5000 },
@@ -23,7 +25,6 @@ function createPriceRow() {
   const row = document.createElement("div");
   row.className = "price-row";
 
-  // 上段：ラベル / 金額表示 / 単位 / 削除
   const top = document.createElement("div");
   top.className = "price-row-top";
 
@@ -59,7 +60,6 @@ function createPriceRow() {
 
   top.append(labelSel, amount, unitSel, removeBtn);
 
-  // 下段：クイックボタン群
   const quick = document.createElement("div");
   quick.className = "quick-btns";
   QUICK_STEPS.forEach((step) => {
@@ -71,7 +71,6 @@ function createPriceRow() {
     });
     quick.appendChild(b);
   });
-  // クリアボタン
   const clearBtn = document.createElement("button");
   clearBtn.type = "button";
   clearBtn.className = "btn-clear";
@@ -87,7 +86,6 @@ document.getElementById("add-price").addEventListener("click", () => {
   document.getElementById("price-list").appendChild(createPriceRow());
 });
 
-// 金額行を文章化（例：「月額 9,800円/月・初期費用 0円（税抜）」）
 function collectPrice() {
   const rows = document.querySelectorAll("#price-list .price-row");
   const parts = [];
@@ -167,7 +165,7 @@ function detectSensitive(text) {
 
 function checkAllInputs(inputs) {
   const found = new Set();
-  const flat = [inputs.product, inputs.strength,
+  const flat = [inputs.product, inputs.strength, inputs.mustInclude,
     ...(inputs.campaigns || []).map((c) => c.detail)];
   flat.forEach((v) => detectSensitive(v).forEach((h) => found.add(h)));
   return [...found];
@@ -193,6 +191,7 @@ document.getElementById("generate-btn").addEventListener("click", async () => {
     term: document.getElementById("term").value,
     tone: document.getElementById("tone").value,
     scene: document.getElementById("scene").value,
+    mustInclude: document.getElementById("must-include").value,
     campaigns: valid,
   };
 
@@ -221,14 +220,12 @@ document.getElementById("generate-btn").addEventListener("click", async () => {
       body: JSON.stringify(inputs),
     });
 
-    // サーバーがエラーを返した場合を検知
     if (!res.ok) {
       throw new Error(`サーバー応答エラー（${res.status}）`);
     }
 
     const data = await res.json();
 
-    // サーバー側のエラー内容を検知
     if (data.error) {
       throw new Error(`サーバー内部エラー：${data.error}`);
     }
@@ -236,11 +233,14 @@ document.getElementById("generate-btn").addEventListener("click", async () => {
     const a = data.patternA || "";
     const b = data.patternB || "";
 
-    // 両方とも空・失敗文言のときは分かりやすく通知
     const looksFailed = (t) => !t || t.includes("生成に失敗");
     if (looksFailed(a) && looksFailed(b)) {
       throw new Error("AIから有効な結果が返りませんでした。時間をおいて再度お試しください。");
     }
+
+    // 編集モードをリセット
+    resetEditMode("A");
+    resetEditMode("B");
 
     document.getElementById("script-A").textContent = a || "（このパターンは生成できませんでした）";
     document.getElementById("script-B").textContent = b || "（このパターンは生成できませんでした）";
@@ -250,7 +250,6 @@ document.getElementById("generate-btn").addEventListener("click", async () => {
     lastResult = { A: a, B: b, inputs };
     loadStats();
   } catch (e) {
-    // 原因を画面に表示（真っ白で止まらない）
     alert("生成に失敗しました。\n原因：" + e.message);
     console.error(e);
   } finally {
@@ -274,21 +273,68 @@ document.querySelectorAll(".btn-copy").forEach((btn) => {
   });
 });
 
-// ========== 2. フィードバック（成約/使用/却下） ==========
-document.querySelectorAll(".btn-win, .btn-use, .btn-reject").forEach((btn) => {
+// ========== 編集機能 ==========
+function resetEditMode(pattern) {
+  editing[pattern] = false;
+  const body = document.getElementById(`script-${pattern}`);
+  const edit = document.getElementById(`edit-${pattern}`);
+  body.hidden = false;
+  edit.hidden = true;
+  const editBtn = document.querySelector(`.btn-edit[data-pattern="${pattern}"]`);
+  if (editBtn) editBtn.textContent = "編集";
+}
+
+document.querySelectorAll(".btn-edit").forEach((btn) => {
+  btn.addEventListener("click", (e) => {
+    const pattern = e.target.dataset.pattern;
+    if (!lastResult[pattern]) {
+      alert("先にスクリプトを生成してください。");
+      return;
+    }
+    const body = document.getElementById(`script-${pattern}`);
+    const edit = document.getElementById(`edit-${pattern}`);
+
+    if (!editing[pattern]) {
+      // 編集モードへ切り替え
+      edit.value = lastResult[pattern] || body.textContent;
+      body.hidden = true;
+      edit.hidden = false;
+      edit.focus();
+      e.target.textContent = "保存";
+      editing[pattern] = true;
+    } else {
+      // 保存して表示モードへ戻す
+      const newText = edit.value;
+      lastResult[pattern] = newText;
+      body.textContent = newText;
+      body.hidden = false;
+      edit.hidden = true;
+      e.target.textContent = "編集";
+      editing[pattern] = false;
+      alert("編集内容を保存しました。コピー・登録・評価に反映されます。");
+    }
+  });
+});
+
+// ========== 2. フィードバック（参考になった／イマイチ） ==========
+document.querySelectorAll(".btn-win, .btn-reject").forEach((btn) => {
   btn.addEventListener("click", async (e) => {
     const pattern = e.target.dataset.pattern;
     if (!lastResult[pattern]) {
       alert("先にスクリプトを生成してください。");
       return;
     }
-    let result = "use";
-    if (e.target.classList.contains("btn-win")) result = "win";
-    if (e.target.classList.contains("btn-reject")) result = "reject";
+    if (editing[pattern]) {
+      alert("編集中です。先に「保存」を押してください。");
+      return;
+    }
+
+    let result = "win"; // 参考になった
+    if (e.target.classList.contains("btn-reject")) result = "reject"; // イマイチ
 
     let rejectReason = "";
     if (result === "reject") {
-      rejectReason = prompt("却下理由（例：表現が固い・訴求が弱い）※AIが避けるべき点を学習します") || "";
+      rejectReason = prompt("イマイチだった理由（例：表現が固い・訴求が弱い）※AIが避けるべき点を学習します") || "";
     }
 
     try {
@@ -305,9 +351,8 @@ document.querySelectorAll(".btn-win, .btn-use, .btn-reject").forEach((btn) => {
       });
 
       const msg = {
-        win: "成約データを記録しました！AIが学習します。",
-        use: "使用データを記録しました。",
-        reject: "却下理由を記録しました。次回以降、この傾向を避けます。",
+        win: "「参考になった」を記録しました！AIが学習します。",
+        reject: "「イマイチ」の理由を記録しました。次回以降、この傾向を避けます。",
       };
       alert(msg[result]);
       loadStats();
@@ -318,12 +363,16 @@ document.querySelectorAll(".btn-win, .btn-use, .btn-reject").forEach((btn) => {
   });
 });
 
-// ========== 3. パターン登録 ==========
+// ========== 3. お気に入りとして登録 ==========
 document.querySelectorAll(".btn-save").forEach((btn) => {
   btn.addEventListener("click", async (e) => {
     const pattern = e.target.dataset.pattern;
     if (!lastResult[pattern]) {
       alert("先にスクリプトを生成してください。");
+      return;
+    }
+    if (editing[pattern]) {
+      alert("編集中です。先に「保存」を押してください。");
       return;
     }
     const name = prompt("このパターンの名前を付けてください（例：勤怠管理・月額プラン向け）");
@@ -339,7 +388,7 @@ document.querySelectorAll(".btn-save").forEach((btn) => {
           inputs: lastResult.inputs,
         }),
       });
-      alert("登録しました。");
+      alert("お気に入りとして登録しました。");
       loadSaved();
     } catch (err) {
       alert("登録に失敗しました。通信環境をご確認ください。");
@@ -355,10 +404,10 @@ async function loadStats() {
     const data = await res.json();
     document.getElementById("stats-body").innerHTML = `
       <p>累計生成回数：<b>${data.totalGenerated}</b> 回</p>
-      <p>累計成約数：<b>${data.totalWins}</b> 件</p>
-      <p>却下数（負例学習）：<b>${data.totalRejects}</b> 件</p>
-      <p>蓄積された勝ちナレッジ：<b>${data.knowledgeCount}</b> 件</p>
-      <p>現在の成約率：<b>${data.winRate}%</b></p>
+      <p>「参考になった」数：<b>${data.totalWins}</b> 件</p>
+      <p>「イマイチ」数（負例学習）：<b>${data.totalRejects}</b> 件</p>
+      <p>蓄積された良質ナレッジ：<b>${data.knowledgeCount}</b> 件</p>
+      <p>好評価率：<b>${data.winRate}%</b></p>
     `;
   } catch (e) {
     document.getElementById("stats-body").textContent = "学習状況を取得できませんでした。";
