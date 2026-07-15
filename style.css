@@ -6,6 +6,7 @@
   --border: #e2e8f0;
   --text: #1e293b;
   --win: #16a34a;
+  --reject: #dc2626;
   --muted: #64748b;
 }
 
@@ -79,6 +80,61 @@ button:hover { background: var(--primary-dark); }
 
 .loading { color: var(--muted); margin-top: 12px; }
 
+.privacy-note {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+/* キャンペーン動的フィールド */
+.campaign-block {
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.campaign-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.btn-add {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  margin-top: 0;
+}
+
+.campaign-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1.5fr auto;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.campaign-row input,
+.campaign-row select { margin-top: 0; }
+
+.btn-remove {
+  background: var(--reject);
+  padding: 8px 12px;
+  margin-top: 0;
+}
+.btn-remove:hover { background: #b91c1c; }
+
+@media (max-width: 700px) {
+  .campaign-row { grid-template-columns: 1fr 1fr; }
+}
+
 .ab-wrapper {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -92,6 +148,15 @@ button:hover { background: var(--primary-dark); }
 .script-card h3 {
   margin-top: 0;
   color: var(--primary-dark);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-copy {
+  font-size: 0.75rem;
+  padding: 5px 10px;
+  margin-top: 0;
 }
 
 .script-body {
@@ -112,6 +177,8 @@ button:hover { background: var(--primary-dark); }
 .btn-win { background: var(--win); }
 .btn-win:hover { background: #15803d; }
 .btn-use { background: var(--muted); }
+.btn-reject { background: var(--reject); }
+.btn-reject:hover { background: #b91c1c; }
 .btn-save { background: var(--primary); }
 
 .stats-desc { color: var(--muted); font-size: 0.9rem; }
@@ -127,14 +194,4 @@ button:hover { background: var(--primary-dark); }
   text-align: center;
   padding: 20px;
   color: var(--muted);
-}
-.privacy-note {
-  background: #fef3c7;
-  border: 1px solid #fcd34d;
-  color: #92400e;
-  border-radius: 8px;
-  padding: 12px 14px;
-  font-size: 0.85rem;
-  margin-bottom: 16px;
-  line-height: 1.6;
 }
