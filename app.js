@@ -1,4 +1,3 @@
-// app.js
 const WORKER_URL = "https://sales-script-maker.skunkonsen.workers.dev";
 
 // 直近の生成結果を一時保存
@@ -222,14 +221,14 @@ document.getElementById("generate-btn").addEventListener("click", async () => {
       body: JSON.stringify(inputs),
     });
 
-    // 【改善】サーバーがエラーを返した場合を検知
+    // サーバーがエラーを返した場合を検知
     if (!res.ok) {
       throw new Error(`サーバー応答エラー（${res.status}）`);
     }
 
     const data = await res.json();
 
-    // 【改善】サーバー側のエラー内容を検知
+    // サーバー側のエラー内容を検知
     if (data.error) {
       throw new Error(`サーバー内部エラー：${data.error}`);
     }
@@ -237,7 +236,7 @@ document.getElementById("generate-btn").addEventListener("click", async () => {
     const a = data.patternA || "";
     const b = data.patternB || "";
 
-    // 【改善】両方とも空・失敗文言のときは分かりやすく通知
+    // 両方とも空・失敗文言のときは分かりやすく通知
     const looksFailed = (t) => !t || t.includes("生成に失敗");
     if (looksFailed(a) && looksFailed(b)) {
       throw new Error("AIから有効な結果が返りませんでした。時間をおいて再度お試しください。");
@@ -251,7 +250,7 @@ document.getElementById("generate-btn").addEventListener("click", async () => {
     lastResult = { A: a, B: b, inputs };
     loadStats();
   } catch (e) {
-    // 【改善】原因を画面に表示（真っ白で止まらない）
+    // 原因を画面に表示（真っ白で止まらない）
     alert("生成に失敗しました。\n原因：" + e.message);
     console.error(e);
   } finally {
