@@ -1,3 +1,4 @@
+/* File: style.css */
 :root {
   --primary: #2563eb;
   --primary-dark: #1e40af;
@@ -78,6 +79,13 @@ button {
 }
 
 button:hover { background: var(--primary-dark); }
+
+/* 【新規】生成中などボタン無効時の見た目 */
+button:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
 
 .loading { color: var(--muted); margin-top: 12px; }
 
@@ -232,7 +240,7 @@ button:hover { background: var(--primary-dark); }
   min-height: 120px;
 }
 
-/* 【新規】生成結果の編集用テキストエリア */
+/* 生成結果の編集用テキストエリア */
 .script-edit {
   width: 100%;
   min-height: 220px;
@@ -258,7 +266,6 @@ button:hover { background: var(--primary-dark); }
 .btn-reject { background: var(--reject); }
 .btn-reject:hover { background: #b91c1c; }
 .btn-save { background: var(--primary); }
-/* 【新規】編集ボタン */
 .btn-edit { background: var(--muted); }
 .btn-edit:hover { background: #475569; }
 
@@ -275,4 +282,51 @@ button:hover { background: var(--primary-dark); }
   text-align: center;
   padding: 20px;
   color: var(--muted);
+}
+
+/* ========== 【新規】品質バッジ・検証表示 ========== */
+.quality-box {
+  margin-bottom: 10px;
+  min-height: 1px;
+}
+
+.q-badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  color: #fff;
+}
+
+.q-high { background: var(--win); }
+.q-mid { background: var(--primary); }
+.q-low { background: #d97706; }
+
+.q-refined {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #ede9fe;
+  color: #6d28d9;
+  margin-left: 6px;
+}
+
+.q-notes {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 6px 0 0;
+}
+
+.input-issues {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+  line-height: 1.6;
 }
