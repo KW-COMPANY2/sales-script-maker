@@ -1,3 +1,5 @@
+<!-- Output: html -->
+<!-- File: index.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -23,11 +25,17 @@
       </div>
 
       <label>商材・サービス名(入力する際は架空のサービス名などに変換して入力してください)
-        <input type="text" id="product" placeholder="例：クラウド勤怠管理システム" />
+        <div class="input-with-mic">
+          <input type="text" id="product" placeholder="例：クラウド勤怠管理システム" />
+          <button type="button" class="btn-mic" data-target="product" title="音声で入力">🎤</button>
+        </div>
       </label>
 
       <label>訴求したい強み
-        <input type="text" id="strength" placeholder="例：導入コスト無料・工数削減" />
+        <div class="input-with-mic">
+          <input type="text" id="strength" placeholder="例：導入コスト無料・工数削減" />
+          <button type="button" class="btn-mic" data-target="strength" title="音声で入力">🎤</button>
+        </div>
       </label>
 
       <!-- 金額 動的追加＋補助ボタン -->
@@ -72,8 +80,11 @@
 
       <!-- スクリプトに入れたい文言・文章 -->
       <label>スクリプトに入れたい文言・文章（任意）
-        <textarea id="must-include" rows="3"
-          placeholder="例：「業界No.1の導入実績があります」という一文を必ず入れてほしい"></textarea>
+        <div class="input-with-mic">
+          <textarea id="must-include" rows="3"
+            placeholder="例：「業界No.1の導入実績があります」という一文を必ず入れてほしい"></textarea>
+          <button type="button" class="btn-mic" data-target="must-include" title="音声で入力">🎤</button>
+        </div>
       </label>
       <p class="price-hint">ここに入力した文言は、AIがスクリプトの自然な位置に盛り込みます。</p>
 
