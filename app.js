@@ -1,4 +1,3 @@
-// app.js
 const WORKER_URL = "https://sales-script-maker.skunkonsen.workers.dev";
 
 // 直近の生成結果を一時保存
