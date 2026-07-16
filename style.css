@@ -1,4 +1,3 @@
-/* File: style.css */
 :root {
   --primary: #2563eb;
   --primary-dark: #1e40af;
@@ -80,7 +79,7 @@ button {
 
 button:hover { background: var(--primary-dark); }
 
-/* 【新規】生成中などボタン無効時の見た目 */
+/* 生成中などボタン無効時の見た目 */
 button:disabled {
   background: #94a3b8;
   cursor: not-allowed;
@@ -331,7 +330,7 @@ button:disabled {
   line-height: 1.6;
 }
 
-/* ========== 【新規】音声入力（マイクボタン） ========== */
+/* ========== 音声入力（マイクボタン） ========== */
 .input-with-mic {
   display: flex;
   align-items: flex-start;
