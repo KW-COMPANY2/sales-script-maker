@@ -1,3 +1,4 @@
+// File: app.js
 const WORKER_URL = "https://sales-script-maker.skunkonsen.workers.dev";
 
 // 直近の生成結果を一時保存
@@ -317,13 +318,26 @@ function renderQuality(meta) {
   if (box) box.innerHTML = build(meta.scoreA, meta.notesA, meta.refinedA);
   if (boxB) boxB.innerHTML = build(meta.scoreB, meta.notesB, meta.refinedB);
 
-  // 入力上の指摘があれば結果セクション先頭に表示
+  // 【新規】外部知識・反応履歴の判断材料を可視化（結果セクション先頭に軽く表示）
   const issueBox = document.getElementById("input-issues");
   if (issueBox) {
+    const extraLines = [];
     if (meta.inputIssues && meta.inputIssues.length > 0) {
+      meta.inputIssues.forEach((i) => extraLines.push("・" + i));
+    }
+    if (typeof meta.externalUsed !== "undefined") {
+      extraLines.push(
+        meta.externalUsed
+          ? "・外部ナレッジ（Wikipedia）を参考情報として活用しました。"
+          : "・今回は外部ナレッジを取得できず、内部ナレッジのみで作成しました。"
+      );
+    }
+    if (meta.reactionStance) {
+      extraLines.push("・反応履歴からの作成方針：" + meta.reactionStance);
+    }
+    if (extraLines.length > 0) {
       issueBox.hidden = false;
-      issueBox.innerHTML =
-        "入力に関する注意：<br>" + meta.inputIssues.map((i) => "・" + i).join("<br>");
+      issueBox.innerHTML = "作成にあたっての判断材料：<br>" + extraLines.join("<br>");
     } else {
       issueBox.hidden = true;
       issueBox.innerHTML = "";
@@ -530,6 +544,84 @@ document.getElementById("apply-trend").addEventListener("click", async () => {
     console.error(err);
   }
 });
+
+// ========== 【新規】音声認識（Web Speech API・ブラウザ標準・完全無料・APIキー不要） ==========
+// マイクに話した内容を対象の入力欄へ自動で文字起こしする。
+// 非対応ブラウザ・権限拒否時は通常の手入力に自動フォールバック（例外処理）。
+(function initVoiceInput() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const micButtons = document.querySelectorAll(".btn-mic");
+
+  // 非対応ブラウザなら、マイクボタンを無効化してツールチップで案内（機能自体は止めない）
+  if (!SpeechRecognition) {
+    micButtons.forEach((btn) => {
+      btn.disabled = true;
+      btn.title = "このブラウザは音声入力に対応していません（Chrome/Edge推奨）";
+      btn.classList.add("mic-unsupported");
+    });
+    return;
+  }
+
+  let activeRecognition = null;
+
+  micButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const targetId = btn.dataset.target;
+      const targetEl = document.getElementById(targetId);
+      if (!targetEl) return;
+
+      // すでに録音中の別ボタンがあれば停止（多重起動防止・条件分岐）
+      if (activeRecognition) {
+        try { activeRecognition.stop(); } catch (e) {}
+        activeRecognition = null;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = "ja-JP";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      activeRecognition = recognition;
+
+      // 録音中の見た目
+      btn.classList.add("mic-active");
+      btn.textContent = "●";
+
+      recognition.onresult = (event) => {
+        const transcript = event.results?.[0]?.[0]?.transcript || "";
+        if (!transcript) return;
+        // 既存の入力に追記（上書きしない＝手入力内容を壊さない）
+        const current = targetEl.value || "";
+        targetEl.value = current ? current + " " + transcript : transcript;
+        // 入力イベントを発火して既存の各種処理と整合させる
+        targetEl.dispatchEvent(new Event("input", { bubbles: true }));
+      };
+
+      recognition.onerror = (event) => {
+        // 権限拒否・無音などでも止めず、案内のみ
+        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+          alert("マイクの使用が許可されていません。ブラウザの設定でマイクを許可してください。");
+        } else if (event.error === "no-speech") {
+          alert("音声が聞き取れませんでした。もう一度お試しください。");
+        }
+      };
+
+      recognition.onend = () => {
+        btn.classList.remove("mic-active");
+        btn.textContent = "🎤";
+        activeRecognition = null;
+      };
+
+      try {
+        recognition.start();
+      } catch (e) {
+        // start連打などの例外でも落とさない
+        btn.classList.remove("mic-active");
+        btn.textContent = "🎤";
+        activeRecognition = null;
+      }
+    });
+  });
+})();
 
 // 初回：金額行1つ・キャンペーン行1つを用意 + データ読み込み
 document.getElementById("price-list").appendChild(createPriceRow());
