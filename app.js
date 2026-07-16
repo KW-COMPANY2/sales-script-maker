@@ -1,4 +1,3 @@
-// File: app.js
 const WORKER_URL = "https://sales-script-maker.skunkonsen.workers.dev";
 
 // 直近の生成結果を一時保存
@@ -318,7 +317,7 @@ function renderQuality(meta) {
   if (box) box.innerHTML = build(meta.scoreA, meta.notesA, meta.refinedA);
   if (boxB) boxB.innerHTML = build(meta.scoreB, meta.notesB, meta.refinedB);
 
-  // 【新規】外部知識・反応履歴の判断材料を可視化（結果セクション先頭に軽く表示）
+  // 外部知識・反応履歴の判断材料を可視化（結果セクション先頭に軽く表示）
   const issueBox = document.getElementById("input-issues");
   if (issueBox) {
     const extraLines = [];
@@ -545,7 +544,7 @@ document.getElementById("apply-trend").addEventListener("click", async () => {
   }
 });
 
-// ========== 【新規】音声認識（Web Speech API・ブラウザ標準・完全無料・APIキー不要） ==========
+// ========== 音声認識（Web Speech API） ==========
 // マイクに話した内容を対象の入力欄へ自動で文字起こしする。
 // 非対応ブラウザ・権限拒否時は通常の手入力に自動フォールバック（例外処理）。
 (function initVoiceInput() {
