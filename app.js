@@ -1,4 +1,3 @@
-// File: app.js
 const WORKER_URL = "https://sales-script-maker.skunkonsen.workers.dev";
 
 // 直近の生成結果を一時保存
@@ -171,7 +170,7 @@ function checkAllInputs(inputs) {
   return [...found];
 }
 
-// ========== 【新規】フロント側の事前バリデーション（条件分岐の強化） ==========
+// ========== フロント側の事前バリデーション（条件分岐の強化） ==========
 function preValidate(inputs) {
   const warnings = [];
   if (inputs.strength && inputs.strength.trim().length < 2) {
@@ -216,7 +215,7 @@ document.getElementById("generate-btn").addEventListener("click", async () => {
     return;
   }
 
-  // 【新規】事前バリデーション（矛盾・不足の警告）
+  // 事前バリデーション（矛盾・不足の警告）
   const warnings = preValidate(inputs);
   if (warnings.length > 0) {
     const ok = confirm(
@@ -273,7 +272,7 @@ document.getElementById("generate-btn").addEventListener("click", async () => {
     document.getElementById("script-A").textContent = a || "（このパターンは生成できませんでした）";
     document.getElementById("script-B").textContent = b || "（このパターンは生成できませんでした）";
 
-    // 【新規】検証スコア・改善メモの表示
+    // 検証スコア・改善メモの表示
     renderQuality(data.meta);
 
     document.getElementById("result-section").hidden = false;
@@ -291,7 +290,7 @@ document.getElementById("generate-btn").addEventListener("click", async () => {
   }
 });
 
-// ========== 【新規】品質（信頼スコア）の表示 ==========
+// ========== 品質（信頼スコア）の表示 ==========
 function scoreLabel(score) {
   if (score >= 80) return { text: "高信頼", cls: "q-high" };
   if (score >= 60) return { text: "標準", cls: "q-mid" };
