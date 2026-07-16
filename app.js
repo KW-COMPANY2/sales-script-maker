@@ -1,3 +1,4 @@
+// File: app.js
 const WORKER_URL = "https://sales-script-maker.skunkonsen.workers.dev";
 
 // 直近の生成結果を一時保存
@@ -170,6 +171,21 @@ function checkAllInputs(inputs) {
   return [...found];
 }
 
+// ========== 【新規】フロント側の事前バリデーション（条件分岐の強化） ==========
+function preValidate(inputs) {
+  const warnings = [];
+  if (inputs.strength && inputs.strength.trim().length < 2) {
+    warnings.push("『訴求したい強み』が短いようです。もう少し具体的だと精度が上がります。");
+  }
+  if (inputs.term === "買い切り" && /月額|円\/月/.test(inputs.price || "")) {
+    warnings.push("契約期間が『買い切り』ですが、金額に月額表記が含まれています。矛盾がないかご確認ください。");
+  }
+  if ((inputs.mustInclude || "").length > 200) {
+    warnings.push("『必ず入れたい文言』が長すぎます。要点を絞ると自然に盛り込めます。");
+  }
+  return warnings;
+}
+
 // ========== 1. 生成ボタン ==========
 document.getElementById("generate-btn").addEventListener("click", async () => {
   const { valid, expired } = collectCampaigns();
@@ -200,6 +216,17 @@ document.getElementById("generate-btn").addEventListener("click", async () => {
     return;
   }
 
+  // 【新規】事前バリデーション（矛盾・不足の警告）
+  const warnings = preValidate(inputs);
+  if (warnings.length > 0) {
+    const ok = confirm(
+      "入力内容について次の点にご注意ください：\n\n" +
+        warnings.map((w) => "・" + w).join("\n") +
+        "\n\nこのまま生成を続けますか？"
+    );
+    if (!ok) return;
+  }
+
   const sensitive = checkAllInputs(inputs);
   if (sensitive.length > 0) {
     const ok = confirm(
@@ -209,8 +236,10 @@ document.getElementById("generate-btn").addEventListener("click", async () => {
     if (!ok) return;
   }
 
+  const genBtn = document.getElementById("generate-btn");
   document.getElementById("loading").hidden = false;
-  document.getElementById("generate-btn").disabled = true;
+  genBtn.disabled = true;
+  genBtn.textContent = "生成中…お待ちください";
 
   try {
     const res = await fetch(`${WORKER_URL}/generate`, {
@@ -243,6 +272,10 @@ document.getElementById("generate-btn").addEventListener("click", async () => {
 
     document.getElementById("script-A").textContent = a || "（このパターンは生成できませんでした）";
     document.getElementById("script-B").textContent = b || "（このパターンは生成できませんでした）";
+
+    // 【新規】検証スコア・改善メモの表示
+    renderQuality(data.meta);
+
     document.getElementById("result-section").hidden = false;
     document.getElementById("result-section").scrollIntoView({ behavior: "smooth" });
 
@@ -253,9 +286,51 @@ document.getElementById("generate-btn").addEventListener("click", async () => {
     console.error(e);
   } finally {
     document.getElementById("loading").hidden = true;
-    document.getElementById("generate-btn").disabled = false;
+    genBtn.disabled = false;
+    genBtn.textContent = "スクリプトを生成する（A/B 2パターン）";
   }
 });
+
+// ========== 【新規】品質（信頼スコア）の表示 ==========
+function scoreLabel(score) {
+  if (score >= 80) return { text: "高信頼", cls: "q-high" };
+  if (score >= 60) return { text: "標準", cls: "q-mid" };
+  return { text: "要確認", cls: "q-low" };
+}
+
+function renderQuality(meta) {
+  const box = document.getElementById("quality-A");
+  const boxB = document.getElementById("quality-B");
+  if (!meta) {
+    if (box) box.innerHTML = "";
+    if (boxB) boxB.innerHTML = "";
+    return;
+  }
+  const build = (score, notes, wasRefined) => {
+    const s = scoreLabel(Number(score) || 0);
+    const refinedTag = wasRefined ? '<span class="q-refined">自動改善済</span>' : "";
+    return `
+      <span class="q-badge ${s.cls}">信頼スコア ${Number(score) || 0} / ${s.text}</span>
+      ${refinedTag}
+      <p class="q-notes">AIチェック：${notes || "特記事項なし"}</p>
+    `;
+  };
+  if (box) box.innerHTML = build(meta.scoreA, meta.notesA, meta.refinedA);
+  if (boxB) boxB.innerHTML = build(meta.scoreB, meta.notesB, meta.refinedB);
+
+  // 入力上の指摘があれば結果セクション先頭に表示
+  const issueBox = document.getElementById("input-issues");
+  if (issueBox) {
+    if (meta.inputIssues && meta.inputIssues.length > 0) {
+      issueBox.hidden = false;
+      issueBox.innerHTML =
+        "入力に関する注意：<br>" + meta.inputIssues.map((i) => "・" + i).join("<br>");
+    } else {
+      issueBox.hidden = true;
+      issueBox.innerHTML = "";
+    }
+  }
+}
 
 // ========== コピー ==========
 document.querySelectorAll(".btn-copy").forEach((btn) => {
@@ -294,7 +369,6 @@ document.querySelectorAll(".btn-edit").forEach((btn) => {
     const edit = document.getElementById(`edit-${pattern}`);
 
     if (!editing[pattern]) {
-      // 編集モードへ切り替え
       edit.value = lastResult[pattern] || body.textContent;
       body.hidden = true;
       edit.hidden = false;
@@ -302,7 +376,6 @@ document.querySelectorAll(".btn-edit").forEach((btn) => {
       e.target.textContent = "保存";
       editing[pattern] = true;
     } else {
-      // 保存して表示モードへ戻す
       const newText = edit.value;
       lastResult[pattern] = newText;
       body.textContent = newText;
@@ -328,8 +401,8 @@ document.querySelectorAll(".btn-win, .btn-reject").forEach((btn) => {
       return;
     }
 
-    let result = "win"; // 参考になった
-    if (e.target.classList.contains("btn-reject")) result = "reject"; // イマイチ
+    let result = "win";
+    if (e.target.classList.contains("btn-reject")) result = "reject";
 
     let rejectReason = "";
     if (result === "reject") {
