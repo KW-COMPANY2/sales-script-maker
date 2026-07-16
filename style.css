@@ -1,3 +1,4 @@
+/* File: style.css */
 :root {
   --primary: #2563eb;
   --primary-dark: #1e40af;
@@ -328,4 +329,49 @@ button:disabled {
   font-size: 0.85rem;
   margin-bottom: 16px;
   line-height: 1.6;
+}
+
+/* ========== 【新規】音声入力（マイクボタン） ========== */
+.input-with-mic {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.input-with-mic input,
+.input-with-mic textarea {
+  flex: 1;
+}
+
+.btn-mic {
+  margin-top: 6px;
+  padding: 10px 12px;
+  font-size: 1rem;
+  line-height: 1;
+  background: #e0e7ff;
+  color: var(--primary-dark);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.btn-mic:hover { background: #c7d2fe; }
+
+/* 録音中の見た目（赤く点灯） */
+.btn-mic.mic-active {
+  background: var(--reject);
+  color: #fff;
+  animation: micpulse 1s infinite;
+}
+
+@keyframes micpulse {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+/* 非対応ブラウザ時 */
+.btn-mic.mic-unsupported {
+  background: #e2e8f0;
+  color: #94a3b8;
+  cursor: not-allowed;
 }
